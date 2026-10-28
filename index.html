@@ -5,59 +5,1152 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Mundisalud — Maqueta interactiva</title>
 <script src="https://unpkg.com/lucide@0.468.0/dist/umd/lucide.min.js"></script>
+
+<!--
+  ============================================================
+  ÍNDICE: DÓNDE EDITAR CADA COSA (usa Ctrl+F con estas marcas)
+  ============================================================
+  [1] ESTILOS (CSS)      -> colores en "COLORES", resto por secciones
+  [2] HTML FIJO          -> barra superior, menú, pie de página
+  [3] JAVASCRIPT
+      3.1 AYUDAS         -> piezas pequeñas reutilizables
+      3.2 DATOS          -> SERVICIOS y PLANES (textos y precios)
+      3.3 COMPONENTES    -> formulario, tabla comparativa, etc.
+      3.4 PÁGINAS        -> una función por página
+      3.5 NAVEGACIÓN     -> cambio de página y envío del formulario
+  ============================================================
+-->
+
+<style>
+/* ============================================================
+   [1] ESTILOS
+   Todo va dentro de #ms-web para no afectar otras páginas.
+   ============================================================ */
+#ms-web {
+
+  /* ---------- COLORES (claro, oscuro) ---------- */
+  --ms-bg:    light-dark(#ffffff, #0c1c2c);  /* fondo */
+  --ms-ink:   light-dark(#112e46, #e3f1fa);  /* texto principal */
+  --ms-soft:  light-dark(#eff8fc, #142c40);  /* fondo suave */
+  --ms-line:  light-dark(#dceaf1, #284358);  /* bordes */
+  --ms-muted: light-dark(#536d80, #acc1d1);  /* texto secundario */
+
+  /* ---------- BASE ---------- */
+  font-family: Arial, sans-serif;
+  color: var(--ms-ink);
+  background: var(--ms-bg);
+  font-size: 15px;
+  line-height: 1.55;
+  border-radius: 16px;
+  overflow: hidden;
+
+  & * { box-sizing: border-box; }
+  & button, & input, & select { font: inherit; }
+  & button { cursor: pointer; }
+  & button:hover { filter: brightness(.95); }
+  & button:focus-visible, & summary:focus-visible { outline: 3px solid #35c3ed; outline-offset: 3px; }
+
+  /* ---------- BARRA SUPERIOR ---------- */
+  .ms-top { padding: 8px 32px; background: #082746; color: #d1ebf9; font-size: 12px; display: flex; justify-content: space-between; gap: 12px; flex-wrap: wrap; }
+
+  /* ---------- ENCABEZADO Y LOGO ---------- */
+  & header { padding: 18px 28px; display: flex; align-items: center; justify-content: space-between; gap: 18px; background: var(--ms-bg); border-bottom: 1px solid var(--ms-line); flex-wrap: wrap; }
+  .ms-logo { display: flex; gap: 9px; align-items: center; color: var(--ms-ink); background: none; border: 0; padding: 0; text-align: left; letter-spacing: 1px; font-weight: 700; }
+  .ms-logo small { font-size: 9px; letter-spacing: 2px; display: block; font-weight: 400; }
+  .ms-cross { background: #0b7eaf; color: #fff; border: 5px solid #c2f0fc; border-radius: 50%; width: 42px; height: 42px; display: grid; place-items: center; }
+
+  /* ---------- MENÚ ---------- */
+  & nav { display: flex; gap: 3px; flex-wrap: wrap; }
+  & nav button { border: 0; background: transparent; color: var(--ms-muted); font-size: 12px; padding: 10px 9px; border-radius: 8px; }
+  & nav button[aria-current=page] { background: var(--ms-soft); color: var(--ms-ink); font-weight: 700; }
+
+  /* ---------- BOTONES ---------- */
+  .ms-btn { border: 0; border-radius: 9px; background: #0875ac; color: #fff; padding: 12px 17px; display: inline-flex; gap: 8px; align-items: center; justify-content: center; text-decoration: none; font-weight: 600; font-size: 13px; min-height: 44px; }
+  .ms-btn.alt   { background: var(--ms-bg); color: var(--ms-ink); border: 1px solid var(--ms-line); }
+  .ms-btn.light { background: #fff; color: #0a3652; }
+  .ms-btn.ghost { background: transparent; color: inherit; border: 1px solid #6b94ae; }
+  .ms-actions { display: flex; flex-wrap: wrap; gap: 10px; margin-top: 22px; }
+  .ms-link { background: none; border: 0; padding: 7px 0; color: light-dark(#086b99, #7ad9f5); text-align: left; font-weight: 600; font-size: 12px; display: inline-flex; gap: 7px; align-items: center; min-height: 36px; }
+
+  /* ---------- PORTADA (HERO) ---------- */
+  .ms-hero { padding: 48px 38px; background: linear-gradient(115deg, #061d37, #0a4468 75%, #087c9e); color: #fff; display: grid; grid-template-columns: 1.25fr 1fr; gap: 30px; align-items: center; }
+  .ms-hero h1 { font-size: 43px; line-height: 1.08; letter-spacing: -1.7px; color: #fff; margin: 14px 0 20px; font-weight: 600; }
+  .ms-hero p { color: #d5e9f4; margin: 0 0 22px; max-width: 550px; }
+  .ms-hero small { color: #b6d5e6; display: block; margin-top: 17px; font-size: 12px; }
+  .ms-tag { font-size: 11px; letter-spacing: 2px; text-transform: uppercase; color: #67d3f5; font-weight: 600; }
+
+  /* Tarjeta celeste de la portada */
+  .ms-art { padding: 26px; border-radius: 25px; background: linear-gradient(145deg, #c7f0fb, #51c6e5); color: #082e48; position: relative; min-height: 285px; display: flex; flex-direction: column; justify-content: space-between; box-shadow: 0 16px 40px #00162a44; }
+  .ms-art .ms-bigicon { width: 86px; height: 86px; border-radius: 24px; background: #ffffff99; display: grid; place-items: center; margin: 12px auto; color: #076da2; }
+  .ms-bigicon svg { width: 44px; height: 44px; }
+  .ms-art h3 { font-size: 23px; margin: 0; text-align: center; }
+  .ms-art p { color: #244e63; font-size: 13px; text-align: center; margin: 8px 0; }
+  .ms-art-bottom { background: #fff; border-radius: 12px; padding: 13px 15px; display: flex; align-items: center; gap: 10px; font-size: 12px; margin-top: 18px; }
+
+  /* ---------- FRANJA DE CONFIANZA ---------- */
+  .ms-trust { display: flex; justify-content: space-around; gap: 12px; flex-wrap: wrap; padding: 18px 28px; background: var(--ms-soft); font-size: 12px; }
+  .ms-trust span { display: flex; align-items: center; gap: 7px; }
+
+  /* ---------- SECCIONES Y TÍTULOS ---------- */
+  .ms-sec { padding: 38px; }
+  .ms-sec.soft { background: var(--ms-soft); }
+  .ms-eyebrow { color: light-dark(#0875ac, #7ad9f5); font-size: 11px; letter-spacing: 2px; text-transform: uppercase; font-weight: 600; }
+  & h2 { font-size: 27px; line-height: 1.2; letter-spacing: -.6px; margin: 9px 0 12px; font-weight: 600; color: var(--ms-ink); }
+  & h3 { color: var(--ms-ink); font-size: 17px; line-height: 1.3; margin: 10px 0; font-weight: 600; }
+  .ms-intro { color: var(--ms-muted); max-width: 650px; margin: 0 0 24px; font-size: 14px; }
+  .ms-sectiontitle { display: flex; align-items: end; justify-content: space-between; gap: 12px; flex-wrap: wrap; }
+
+  /* Cabecera de páginas internas */
+  .ms-breadcrumb { padding: 15px 38px; font-size: 12px; color: var(--ms-muted); border-bottom: 1px solid var(--ms-line); }
+  .ms-breadcrumb button { border: 0; background: none; color: inherit; font: inherit; padding: 0; }
+  .ms-heading { padding: 38px; background: var(--ms-soft); }
+  .ms-heading h1 { font-size: 34px; line-height: 1.15; letter-spacing: -1px; margin: 12px 0 15px; color: var(--ms-ink); }
+  .ms-heading p { max-width: 650px; color: var(--ms-muted); margin: 0; }
+
+  /* ---------- REJILLAS Y TARJETAS ---------- */
+  .ms-grid { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 15px; }
+  .ms-grid.two { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .ms-split { display: grid; grid-template-columns: 1.5fr 1fr; gap: 25px; align-items: start; }
+  .ms-tile { background: var(--ms-bg); border: 1px solid var(--ms-line); border-radius: 15px; padding: 23px; min-width: 0; }
+  .ms-tile p { font-size: 13px; color: var(--ms-muted); margin: 9px 0 15px; }
+  .ms-icon { background: var(--ms-soft); color: light-dark(#0875ac, #7ad9f5); width: 42px; height: 42px; border-radius: 12px; display: grid; place-items: center; }
+
+  /* ---------- PLANES Y PRECIOS ---------- */
+  .ms-price { font-size: 37px; font-weight: 600; letter-spacing: -1px; margin: 15px 0 2px; }
+  .ms-price small { font-size: 12px; letter-spacing: 0; color: var(--ms-muted); font-weight: 400; }
+  .ms-plan { position: relative; display: flex; flex-direction: column; }
+  .ms-plan.focus { border: 2px solid #179bc5; }
+  .ms-plan ul { padding: 0; list-style: none; margin: 14px 0 20px; flex: 1; }
+  .ms-plan li { font-size: 12px; padding: 7px 0; border-bottom: 1px solid var(--ms-line); }
+  .ms-plan li::before { content: '✓'; color: light-dark(#0875ac, #7ad9f5); margin-right: 7px; }
+  .ms-note { font-size: 12px; color: var(--ms-muted); margin: 15px 0 0; }
+
+  /* ---------- BANNER DE EMPRESAS ---------- */
+  .ms-banner { background: #0a3553; color: #fff; border-radius: 18px; padding: 32px; display: grid; grid-template-columns: 1.6fr 1fr; gap: 28px; align-items: center; }
+  .ms-banner h2 { color: #fff; }
+  .ms-banner p { color: #cce3ef; font-size: 14px; }
+
+  /* ---------- PASOS ---------- */
+  .ms-num { font-size: 13px; display: inline-grid; place-items: center; width: 30px; height: 30px; border-radius: 50%; background: #0875ac; color: #fff; }
+  .ms-step { padding: 12px 15px 12px 0; }
+  .ms-step p { color: var(--ms-muted); font-size: 13px; }
+
+  /* ---------- PREGUNTAS FRECUENTES ---------- */
+  & details { border-bottom: 1px solid var(--ms-line); padding: 17px 0; }
+  & summary { font-size: 14px; font-weight: 600; cursor: pointer; }
+  & details p { font-size: 13px; color: var(--ms-muted); max-width: 720px; }
+
+  /* ---------- LISTAS Y ETIQUETAS ---------- */
+  .ms-pills { display: flex; gap: 8px; flex-wrap: wrap; margin: 18px 0; }
+  .ms-pill { padding: 7px 11px; background: var(--ms-soft); color: var(--ms-ink); border-radius: 20px; font-size: 12px; border: 1px solid var(--ms-line); }
+  .ms-list { padding-left: 18px; color: var(--ms-muted); font-size: 14px; }
+  .ms-list li { margin: 9px 0; }
+
+  /* ---------- FORMULARIOS ---------- */
+  .ms-contactbox { border-radius: 15px; background: var(--ms-soft); padding: 26px; }
+  & label { display: block; margin: 13px 0; color: var(--ms-ink); font-size: 13px; }
+  & input, & select { display: block; width: 100%; padding: 11px; margin-top: 5px; border: 1px solid var(--ms-line); border-radius: 8px; background: var(--ms-bg); color: var(--ms-ink); min-width: 0; font-size: 16px; }
+  & input[type=checkbox] { width: auto; display: inline; margin-right: 7px; }
+  .ms-status { padding: 13px; border-radius: 8px; background: var(--ms-soft); font-size: 13px; margin-top: 15px; }
+
+  /* ---------- TABLA COMPARATIVA ---------- */
+  .ms-tablewrap { overflow-x: auto; }
+  & table { width: 100%; border-collapse: collapse; font-size: 12px; }
+  & th, & td { padding: 13px 10px; text-align: left; border-bottom: 1px solid var(--ms-line); min-width: 100px; }
+  & th { background: var(--ms-soft); }
+
+  /* ---------- ESPACIOS PARA FOTOS ---------- */
+  .ms-outline { border: 1px dashed var(--ms-line); background: var(--ms-soft); border-radius: 16px; padding: 25px; min-height: 190px; display: grid; place-content: center; text-align: center; color: var(--ms-muted); }
+  .ms-outline p { font-size: 12px; }
+
+  /* ---------- PIE DE PÁGINA ---------- */
+  & footer { background: #071f33; color: #bdd4e3; padding: 30px 38px; font-size: 12px; display: grid; grid-template-columns: 1.4fr 1fr 1fr; gap: 28px; }
+  & footer strong { color: #fff; display: block; margin-bottom: 10px; }
+  & footer button { display: block; background: none; border: 0; color: #bdd4e3; padding: 5px 0; font: inherit; text-align: left; }
+  .ms-footnote { background: #071f33; color: #8dafc4; padding: 12px 38px; font-size: 11px; border-top: 1px solid #234357; }
+
+  /* ---------- CELULAR (hasta 700px) ---------- */
+  @media (max-width: 700px) {
+    .ms-hero { grid-template-columns: 1fr; padding: 30px 22px; }
+    .ms-hero h1 { font-size: 35px; }
+    .ms-art { min-height: 220px; }
+    .ms-sec, .ms-heading { padding: 28px 22px; }
+    .ms-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+    .ms-split, .ms-banner { grid-template-columns: 1fr; }
+    & header { padding: 16px 20px; }
+    & nav { width: 100%; }
+    & nav button { font-size: 12px; }
+    & footer { grid-template-columns: 1fr 1fr; padding: 28px 22px; }
+    .ms-top { padding: 8px 20px; }
+    .ms-breadcrumb { padding: 12px 22px; }
+  }
+
+  /* ---------- CELULAR PEQUEÑO (hasta 440px) ---------- */
+  @media (max-width: 440px) {
+    .ms-grid, .ms-grid.two { grid-template-columns: 1fr; }
+    & footer { grid-template-columns: 1fr; }
+    & h2 { font-size: 25px; }
+    .ms-hero h1 { font-size: 32px; }
+    .ms-heading h1 { font-size: 29px; }
+  }
+}
+</style>
 </head>
+
 <body>
 <div id="ms-web">
-<style>
-#ms-web{--ms-bg:light-dark(#ffffff,#0c1c2c);--ms-ink:light-dark(#112e46,#e3f1fa);--ms-soft:light-dark(#eff8fc,#142c40);--ms-line:light-dark(#dceaf1,#284358);--ms-muted:light-dark(#536d80,#acc1d1);font-family:Arial,sans-serif;color:var(--ms-ink);background:var(--ms-bg);font-size:15px;line-height:1.55;border-radius:16px;overflow:hidden}#ms-web *{box-sizing:border-box}#ms-web button,#ms-web input,#ms-web select{font:inherit}#ms-web button{cursor:pointer}#ms-web .ms-top{padding:8px 32px;background:#082746;color:#d1ebf9;font-size:12px;display:flex;justify-content:space-between;gap:12px;flex-wrap:wrap}#ms-web header{padding:18px 28px;display:flex;align-items:center;justify-content:space-between;gap:18px;background:var(--ms-bg);border-bottom:1px solid var(--ms-line);flex-wrap:wrap}#ms-web .ms-logo{display:flex;gap:9px;align-items:center;color:var(--ms-ink);background:none;border:0;padding:0;text-align:left;letter-spacing:1px;font-weight:700}#ms-web .ms-logo small{font-size:9px;letter-spacing:2px;display:block;font-weight:400}#ms-web .ms-cross{background:#0b7eaf;color:#fff;border:5px solid #c2f0fc;border-radius:50%;width:42px;height:42px;display:grid;place-items:center}#ms-web nav{display:flex;gap:3px;flex-wrap:wrap}#ms-web nav button{border:0;background:transparent;color:var(--ms-muted);font-size:12px;padding:10px 9px;border-radius:8px}#ms-web nav button[aria-current=page]{background:var(--ms-soft);color:var(--ms-ink);font-weight:700}#ms-web .ms-btn{border:0;border-radius:9px;background:#0875ac;color:#fff;padding:12px 17px;display:inline-flex;gap:8px;align-items:center;justify-content:center;text-decoration:none;font-weight:600;font-size:13px;min-height:44px}#ms-web .ms-btn.alt{background:var(--ms-bg);color:var(--ms-ink);border:1px solid var(--ms-line)}#ms-web .ms-btn.light{background:#fff;color:#0a3652}#ms-web .ms-btn.ghost{background:transparent;color:inherit;border:1px solid #6b94ae}#ms-web .ms-hero{padding:48px 38px;background:linear-gradient(115deg,#061d37,#0a4468 75%,#087c9e);color:#fff;display:grid;grid-template-columns:1.25fr 1fr;gap:30px;align-items:center}#ms-web .ms-hero h1{font-size:43px;line-height:1.08;letter-spacing:-1.7px;color:#fff;margin:14px 0 20px;font-weight:600}#ms-web .ms-hero p{color:#d5e9f4;margin:0 0 22px;max-width:550px}#ms-web .ms-tag{font-size:11px;letter-spacing:2px;text-transform:uppercase;color:#67d3f5;font-weight:600}#ms-web .ms-actions{display:flex;flex-wrap:wrap;gap:10px;margin-top:22px}#ms-web .ms-hero small{color:#b6d5e6;display:block;margin-top:17px;font-size:12px}#ms-web .ms-art{padding:26px;border-radius:25px;background:linear-gradient(145deg,#c7f0fb,#51c6e5);color:#082e48;position:relative;min-height:285px;display:flex;flex-direction:column;justify-content:space-between;box-shadow:0 16px 40px #00162a44}#ms-web .ms-art .ms-bigicon{width:86px;height:86px;border-radius:24px;background:#ffffff99;display:grid;place-items:center;margin:12px auto;color:#076da2}#ms-web .ms-bigicon svg{width:44px;height:44px}#ms-web .ms-art h3{font-size:23px;margin:0;text-align:center}#ms-web .ms-art p{color:#244e63;font-size:13px;text-align:center;margin:8px 0}#ms-web .ms-art-bottom{background:#fff;border-radius:12px;padding:13px 15px;display:flex;align-items:center;gap:10px;font-size:12px;margin-top:18px}#ms-web .ms-trust{display:flex;justify-content:space-around;gap:12px;flex-wrap:wrap;padding:18px 28px;background:var(--ms-soft);font-size:12px}#ms-web .ms-trust span{display:flex;align-items:center;gap:7px}#ms-web .ms-sec{padding:38px}#ms-web .ms-sec.soft{background:var(--ms-soft)}#ms-web .ms-eyebrow{color:light-dark(#0875ac,#7ad9f5);font-size:11px;letter-spacing:2px;text-transform:uppercase;font-weight:600}#ms-web h2{font-size:27px;line-height:1.2;letter-spacing:-.6px;margin:9px 0 12px;font-weight:600;color:var(--ms-ink)}#ms-web h3{color:var(--ms-ink);font-size:17px;line-height:1.3;margin:10px 0;font-weight:600}#ms-web .ms-intro{color:var(--ms-muted);max-width:650px;margin:0 0 24px;font-size:14px}#ms-web .ms-grid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:15px}#ms-web .ms-grid.two{grid-template-columns:repeat(2,minmax(0,1fr))}#ms-web .ms-tile{background:var(--ms-bg);border:1px solid var(--ms-line);border-radius:15px;padding:23px;min-width:0}#ms-web .ms-tile p{font-size:13px;color:var(--ms-muted);margin:9px 0 15px}#ms-web .ms-icon{background:var(--ms-soft);color:light-dark(#0875ac,#7ad9f5);width:42px;height:42px;border-radius:12px;display:grid;place-items:center}#ms-web .ms-link{background:none;border:0;padding:7px 0;color:light-dark(#086b99,#7ad9f5);text-align:left;font-weight:600;font-size:12px;display:inline-flex;gap:7px;align-items:center;min-height:36px}#ms-web .ms-price{font-size:37px;font-weight:600;letter-spacing:-1px;margin:15px 0 2px}#ms-web .ms-price small{font-size:12px;letter-spacing:0;color:var(--ms-muted);font-weight:400}#ms-web .ms-plan{position:relative;display:flex;flex-direction:column}#ms-web .ms-plan.focus{border:2px solid #179bc5}#ms-web .ms-plan ul{padding:0;list-style:none;margin:14px 0 20px;flex:1}#ms-web .ms-plan li{font-size:12px;padding:7px 0;border-bottom:1px solid var(--ms-line)}#ms-web .ms-plan li:before{content:'✓';color:light-dark(#0875ac,#7ad9f5);margin-right:7px}#ms-web .ms-note{font-size:12px;color:var(--ms-muted);margin:15px 0 0}#ms-web .ms-banner{background:#0a3553;color:#fff;border-radius:18px;padding:32px;display:grid;grid-template-columns:1.6fr 1fr;gap:28px;align-items:center}#ms-web .ms-banner h2{color:#fff}#ms-web .ms-banner p{color:#cce3ef;font-size:14px}#ms-web .ms-num{font-size:13px;display:inline-grid;place-items:center;width:30px;height:30px;border-radius:50%;background:#0875ac;color:#fff}#ms-web .ms-step{padding:12px 15px 12px 0}#ms-web .ms-step p{color:var(--ms-muted);font-size:13px}#ms-web details{border-bottom:1px solid var(--ms-line);padding:17px 0}#ms-web summary{font-size:14px;font-weight:600;cursor:pointer}#ms-web details p{font-size:13px;color:var(--ms-muted);max-width:720px}#ms-web footer{background:#071f33;color:#bdd4e3;padding:30px 38px;font-size:12px;display:grid;grid-template-columns:1.4fr 1fr 1fr;gap:28px}#ms-web footer strong{color:#fff;display:block;margin-bottom:10px}#ms-web footer button{display:block;background:none;border:0;color:#bdd4e3;padding:5px 0;font:inherit;text-align:left}#ms-web .ms-breadcrumb{padding:15px 38px;font-size:12px;color:var(--ms-muted);border-bottom:1px solid var(--ms-line)}#ms-web .ms-breadcrumb button{border:0;background:none;color:inherit;font:inherit;padding:0}#ms-web .ms-heading{padding:38px;background:var(--ms-soft)}#ms-web .ms-heading h1{font-size:34px;line-height:1.15;letter-spacing:-1px;margin:12px 0 15px;color:var(--ms-ink)}#ms-web .ms-heading p{max-width:650px;color:var(--ms-muted);margin:0}#ms-web .ms-split{display:grid;grid-template-columns:1.5fr 1fr;gap:25px;align-items:start}#ms-web .ms-pills{display:flex;gap:8px;flex-wrap:wrap;margin:18px 0}#ms-web .ms-pill{padding:7px 11px;background:var(--ms-soft);color:var(--ms-ink);border-radius:20px;font-size:12px;border:1px solid var(--ms-line)}#ms-web .ms-list{padding-left:18px;color:var(--ms-muted);font-size:14px}#ms-web .ms-list li{margin:9px 0}#ms-web .ms-contactbox{border-radius:15px;background:var(--ms-soft);padding:26px}#ms-web label{display:block;margin:13px 0;color:var(--ms-ink);font-size:13px}#ms-web input,#ms-web select{display:block;width:100%;padding:11px;margin-top:5px;border:1px solid var(--ms-line);border-radius:8px;background:var(--ms-bg);color:var(--ms-ink);min-width:0;font-size:16px}#ms-web input[type=checkbox]{width:auto;display:inline;margin-right:7px}#ms-web .ms-tablewrap{overflow-x:auto}#ms-web table{width:100%;border-collapse:collapse;font-size:12px}#ms-web th,#ms-web td{padding:13px 10px;text-align:left;border-bottom:1px solid var(--ms-line);min-width:100px}#ms-web th{background:var(--ms-soft)}#ms-web .ms-outline{border:1px dashed var(--ms-line);background:var(--ms-soft);border-radius:16px;padding:25px;min-height:190px;display:grid;place-content:center;text-align:center;color:var(--ms-muted)}#ms-web .ms-outline p{font-size:12px}#ms-web .ms-status{padding:13px;border-radius:8px;background:var(--ms-soft);font-size:13px;margin-top:15px}#ms-web .ms-footnote{background:#071f33;color:#8dafc4;padding:12px 38px;font-size:11px;border-top:1px solid #234357}#ms-web .ms-sectiontitle{display:flex;align-items:end;justify-content:space-between;gap:12px;flex-wrap:wrap}#ms-web button:hover{filter:brightness(.95)}#ms-web button:focus-visible,#ms-web summary:focus-visible{outline:3px solid #35c3ed;outline-offset:3px}
-@media(max-width:700px){#ms-web .ms-hero{grid-template-columns:1fr;padding:30px 22px}#ms-web .ms-hero h1{font-size:35px}#ms-web .ms-art{min-height:220px}#ms-web .ms-sec,#ms-web .ms-heading{padding:28px 22px}#ms-web .ms-grid{grid-template-columns:repeat(2,minmax(0,1fr))}#ms-web .ms-split,#ms-web .ms-banner{grid-template-columns:1fr}#ms-web header{padding:16px 20px}#ms-web nav{width:100%}#ms-web nav button{font-size:12px}#ms-web footer{grid-template-columns:1fr 1fr;padding:28px 22px}#ms-web .ms-top{padding:8px 20px}#ms-web .ms-breadcrumb{padding:12px 22px}}@media(max-width:440px){#ms-web .ms-grid,#ms-web .ms-grid.two{grid-template-columns:1fr}#ms-web footer{grid-template-columns:1fr}#ms-web h2{font-size:25px}#ms-web .ms-hero h1{font-size:32px}#ms-web .ms-heading h1{font-size:29px}}
-</style>
-<div class="ms-top"><span>Quito · Sector La Pradera</span><span>Servicios individuales · Planes de bienestar · Empresas</span></div>
-<header><button class="ms-logo" data-page="inicio" aria-label="Mundisalud inicio"><span class="ms-cross"><i data-lucide="heart-pulse" aria-hidden="true"></i></span><span>MUNDISALUD<small>CENTRO MÉDICO</small></span></button><nav aria-label="Menú principal"><button data-page="inicio" aria-current="page">Inicio</button><button data-page="servicios">Servicios médicos</button><button data-page="planes">Planes</button><button data-page="empresas">Para empresas</button><button data-page="nosotros">Nosotros</button><button data-page="contacto">Contacto</button></nav><button class="ms-btn" data-page="contacto">Solicitar cita</button></header>
+
+<!-- ============================================================
+     [2] HTML FIJO (se ve en todas las páginas)
+     ============================================================ -->
+
+<!-- BARRA SUPERIOR -->
+<div class="ms-top">
+  <span>Quito · Sector La Pradera</span>
+  <span>Servicios individuales · Planes de bienestar · Empresas</span>
+</div>
+
+<!-- ENCABEZADO: logo, menú y botón -->
+<header>
+  <button class="ms-logo" data-page="inicio" aria-label="Mundisalud inicio">
+    <span class="ms-cross"><i data-lucide="heart-pulse" aria-hidden="true"></i></span>
+    <span>MUNDISALUD<small>CENTRO MÉDICO</small></span>
+  </button>
+
+  <nav aria-label="Menú principal">
+    <button data-page="inicio" aria-current="page">Inicio</button>
+    <button data-page="servicios">Servicios médicos</button>
+    <button data-page="planes">Planes</button>
+    <button data-page="empresas">Para empresas</button>
+    <button data-page="nosotros">Nosotros</button>
+    <button data-page="contacto">Contacto</button>
+  </nav>
+
+  <button class="ms-btn" data-page="contacto">Solicitar cita</button>
+</header>
+
+<!-- AQUÍ SE DIBUJA CADA PÁGINA (lo llena el JavaScript) -->
 <main id="ms-content"></main>
-<footer><div><strong>MUNDISALUD</strong>La salud al alcance de todos.<p>Atención médica, prevención y diagnóstico para personas, familias y empresas.</p></div><div><strong>Encuentra tu atención</strong><button data-page="servicios">Servicios individuales</button><button data-page="planes">Planes de bienestar</button><button data-page="empresas">Soluciones empresariales</button></div><div><strong>Visítanos en Quito</strong><p>Cristóbal de Acuña N29B<br>y Juan de Agama<br>Sector La Pradera</p><button data-page="contacto">Contacto y ubicación →</button></div></footer><div class="ms-footnote"><button class="ms-link" data-page="condiciones" style="color:#bdd4e3">Condiciones de planes</button> · <button class="ms-link" data-page="privacidad" style="color:#bdd4e3">Privacidad</button><span style="display:block">Vista conceptual · Las solicitudes de esta maqueta no se envían.</span></div>
+
+<!-- PIE DE PÁGINA -->
+<footer>
+  <div>
+    <strong>MUNDISALUD</strong>
+    La salud al alcance de todos.
+    <p>Atención médica, prevención y diagnóstico para personas, familias y empresas.</p>
+  </div>
+  <div>
+  <strong>Encuentra tu atención</strong>
+  <button data-page="servicios">Servicios individuales</button>
+  <button data-page="planes">Planes de bienestar</button>
+  <button data-page="empresas">Soluciones empresariales</button>
+</div>
+
+<div>
+  <strong>Encuentra tu atención</strong>
+  <button data-page="servicios">Servicios individuales</button>
+  <button data-page="planes">Planes de bienestar</button>
+  <button data-page="empresas">Soluciones empresariales</button>
+</div>
+
+<div>
+  <strong>Visítanos en Quito</strong>
+
+  <p>
+    Cristóbal de Acuña N29B<br>
+    y Juan de Agama<br>
+    Sector La Pradera
+  </p>
+
+  <a
+    href="https://www.google.com/maps/search/?api=1&query=-0.1932283998048675%2C-78.49576952503539"
+    target="_blank"
+    rel="noopener noreferrer"
+    style="display:inline-block; color:inherit; text-decoration:underline; margin:10px 0;">
+    📍 Abrir ubicación en Google Maps
+  </a>
+
+  <button data-page="contacto">Contacto y ubicación →</button>
+</div>
+</footer>
+
+<!-- FRANJA FINAL -->
+<div class="ms-footnote">
+  <button class="ms-link" data-page="condiciones" style="color:#bdd4e3">Condiciones de planes</button> ·
+  <button class="ms-link" data-page="privacidad" style="color:#bdd4e3">Privacidad</button>
+  <span style="display:block">Vista conceptual · Las solicitudes de esta maqueta no se envían.</span>
+</div>
+
+
 <script>
-(function(){
-const root=document.getElementById('ms-web'), main=root.querySelector('#ms-content');
-const icon=n=>`<i data-lucide="${n}" aria-hidden="true"></i>`;
-const btn=(label,page,alt='')=>`<button class="ms-btn ${alt}" data-page="${page}">${label}</button>`;
-const link=(label,page)=>`<button class="ms-link" data-page="${page}">${label} ${icon('arrow-up-right')}</button>`;
-const heading=(tag,title,text)=>`<div class="ms-heading"><span class="ms-eyebrow">${tag}</span><h1>${title}</h1><p>${text}</p></div>`;
-const bread=t=>`<div class="ms-breadcrumb"><button data-page="inicio">Inicio</button> / ${t}</div>`;
-const sec=(tag,title,intro,content,soft=false)=>`<section class="ms-sec ${soft?'soft':''}"><span class="ms-eyebrow">${tag}</span><h2>${title}</h2>${intro?`<p class="ms-intro">${intro}</p>`:''}${content}</section>`;
-const faq=(q,a)=>`<details><summary>${q}</summary><p>${a}</p></details>`;
-const services=[
-{id:'consultas',name:'Consultas médicas',icon:'stethoscope',desc:'Medicina general y atención por especialidades.',title:'Atención médica para cuidar de ti.',detail:'Solicita una consulta de medicina general o consulta la disponibilidad de nuestros especialistas. Puedes atenderte sin afiliarte a un plan.',items:['Medicina general','Ginecología y obstetricia','Pediatría','Traumatología','Cardiología y urología','Otorrinolaringología','Psicología y nutrición'],note:'Las especialidades y horarios se confirman al solicitar atención.'},
-{id:'ecografias',name:'Ecografías',icon:'scan-line',desc:'Apoyo diagnóstico para tu atención médica.',title:'Coordina la ecografía que necesitas.',detail:'Consulta los tipos de ecografía disponibles, sus tarifas y la preparación indicada para tu examen.',items:['Consulta el tipo de estudio que necesitas','Recibe indicaciones de preparación','Coordina fecha y disponibilidad'],note:'El 30% de descuento de los planes aplica según sus condiciones y servicios elegibles.'},
-{id:'rayos-x',name:'Rayos X',icon:'scan',desc:'Estudios mediante servicio especializado.',title:'Rayos X con atención coordinada.',detail:'Solicita información del estudio indicado y conoce la modalidad, ubicación y disponibilidad del servicio especializado.',items:['Consulta disponibilidad del estudio','Confirma tarifa y lugar de atención','Coordina tu cita con el equipo'],note:'La modalidad y el prestador se confirman para cada estudio. No se presume que esté incluido en los planes.'},
-{id:'laboratorio',name:'Laboratorio clínico',icon:'flask-conical',desc:'Exámenes individuales de prevención y diagnóstico.',title:'Conoce más sobre tu salud.',detail:'Solicita tus exámenes de laboratorio de forma individual. Te orientamos sobre pruebas disponibles, preparación y entrega de resultados.',items:['Hematología','Química sanguínea','Hormonas','Inmunología y pruebas especializadas','Exámenes de rutina y ocupacionales','Toma de muestras'],note:'La preparación y el plazo de entrega dependen de las pruebas solicitadas.'},
-{id:'visual',name:'Salud visual',icon:'eye',desc:'Chequeos visuales y atención de optometría.',title:'Dale atención a tu salud visual.',detail:'Consulta por chequeos visuales y atención de optometría sin necesidad de contratar un plan.',items:['Chequeo visual','Consulta de optometría','Coordinación de disponibilidad'],note:'Confirmar alcance y tarifa antes de la cita. El chequeo de los planes tiene condiciones propias.'},
-{id:'dental',name:'Atención dental',icon:'smile',desc:'Consulta odontológica y servicios por separado.',title:'El cuidado de tu sonrisa empieza aquí.',detail:'Solicita atención dental individual y consulta con nuestro equipo los procedimientos disponibles.',items:['Consulta de disponibilidad','Orientación sobre servicios dentales','Cotización según el procedimiento'],note:'Los procedimientos y tarifas se confirman con el prestador. El chequeo del plan no implica tratamientos dentales incluidos.'}
+(function () {
+
+const root = document.getElementById('ms-web');
+const main = root.querySelector('#ms-content');
+
+
+/* ============================================================
+   3.1 AYUDAS: piezas pequeñas que se usan en todas las páginas
+   ============================================================ */
+
+// Ícono de lucide.dev/icons
+const icon = n => `<i data-lucide="${n}" aria-hidden="true"></i>`;
+
+// Botón que lleva a otra página. "alt" puede ser: '', 'alt', 'light', 'ghost'
+const btn = (label, page, alt = '') =>
+  `<button class="ms-btn ${alt}" data-page="${page}">${label}</button>`;
+
+// Enlace con flechita que lleva a otra página
+const link = (label, page) =>
+  `<button class="ms-link" data-page="${page}">${label} ${icon('arrow-up-right')}</button>`;
+
+// Cabecera gris con título grande (páginas internas)
+const heading = (tag, title, text) =>
+  `<div class="ms-heading"><span class="ms-eyebrow">${tag}</span><h1>${title}</h1><p>${text}</p></div>`;
+
+// Ruta "Inicio / ..." de arriba
+const bread = t =>
+  `<div class="ms-breadcrumb"><button data-page="inicio">Inicio</button> / ${t}</div>`;
+
+// Sección con etiqueta, título, introducción y contenido. soft=true pone fondo suave.
+const sec = (tag, title, intro, content, soft = false) =>
+  `<section class="ms-sec ${soft ? 'soft' : ''}">
+     <span class="ms-eyebrow">${tag}</span>
+     <h2>${title}</h2>
+     ${intro ? `<p class="ms-intro">${intro}</p>` : ''}
+     ${content}
+   </section>`;
+
+// Pregunta frecuente desplegable
+const faq = (q, a) => `<details><summary>${q}</summary><p>${a}</p></details>`;
+
+
+/* ============================================================
+   3.2 DATOS: aquí cambias servicios, planes, textos y precios
+   ============================================================ */
+
+/* ---------- SERVICIOS ----------
+   Para agregar uno: copia un bloque { ... }, pégalo con una coma
+   y cambia los textos.
+   id    = nombre interno (sin espacios ni tildes)
+   name  = nombre visible
+   icon  = ícono de lucide.dev/icons
+   desc  = descripción corta (tarjeta)
+   title = título grande de su página
+   detail= párrafo de su página
+   items = lista de puntos
+   note  = nota al pie                                         */
+const services = [
+  {
+    id: 'consultas', name: 'Consultas médicas', icon: 'stethoscope',
+    desc: 'Medicina general y atención por especialidades.',
+    title: 'Atención médica para cuidar de ti.',
+    detail: 'Solicita una consulta de medicina general o consulta la disponibilidad de nuestros especialistas. Puedes atenderte sin afiliarte a un plan.',
+    items: ['Medicina general', 'Ginecología y obstetricia', 'Pediatría', 'Traumatología', 'Cardiología y urología', 'Otorrinolaringología', 'Psicología y nutrición'],
+    note: 'Las especialidades y horarios se confirman al solicitar atención.'
+  },
+  {
+    id: 'ecografias', name: 'Ecografías', icon: 'scan-line',
+    desc: 'Apoyo diagnóstico para tu atención médica.',
+    title: 'Coordina la ecografía que necesitas.',
+    detail: 'Consulta los tipos de ecografía disponibles, sus tarifas y la preparación indicada para tu examen.',
+    items: ['Consulta el tipo de estudio que necesitas', 'Recibe indicaciones de preparación', 'Coordina fecha y disponibilidad'],
+    note: 'El 30% de descuento de los planes aplica según sus condiciones y servicios elegibles.'
+  },
+  {
+    id: 'rayos-x', name: 'Rayos X', icon: 'scan',
+    desc: 'Estudios mediante servicio especializado.',
+    title: 'Rayos X con atención coordinada.',
+    detail: 'Solicita información del estudio indicado y conoce la modalidad, ubicación y disponibilidad del servicio especializado.',
+    items: ['Consulta disponibilidad del estudio', 'Confirma tarifa y lugar de atención', 'Coordina tu cita con el equipo'],
+    note: 'La modalidad y el prestador se confirman para cada estudio. No se presume que esté incluido en los planes.'
+  },
+  {
+    id: 'laboratorio', name: 'Laboratorio clínico', icon: 'flask-conical',
+    desc: 'Exámenes individuales de prevención y diagnóstico.',
+    title: 'Conoce más sobre tu salud.',
+    detail: 'Solicita tus exámenes de laboratorio de forma individual. Te orientamos sobre pruebas disponibles, preparación y entrega de resultados.',
+    items: ['Hematología', 'Química sanguínea', 'Hormonas', 'Inmunología y pruebas especializadas', 'Exámenes de rutina y ocupacionales', 'Toma de muestras'],
+    note: 'La preparación y el plazo de entrega dependen de las pruebas solicitadas.'
+  },
+  {
+    id: 'visual', name: 'Salud visual', icon: 'eye',
+    desc: 'Chequeos visuales y atención de optometría.',
+    title: 'Dale atención a tu salud visual.',
+    detail: 'Consulta por chequeos visuales y atención de optometría sin necesidad de contratar un plan.',
+    items: ['Chequeo visual', 'Consulta de optometría', 'Coordinación de disponibilidad'],
+    note: 'Confirmar alcance y tarifa antes de la cita. El chequeo de los planes tiene condiciones propias.'
+  },
+  {
+    id: 'dental', name: 'Atención dental', icon: 'smile',
+    desc: 'Consulta odontológica y servicios por separado.',
+    title: 'El cuidado de tu sonrisa empieza aquí.',
+    detail: 'Solicita atención dental individual y consulta con nuestro equipo los procedimientos disponibles.',
+    items: ['Consulta de disponibilidad', 'Orientación sobre servicios dentales', 'Cotización según el procedimiento'],
+    note: 'Los procedimientos y tarifas se confirman con el prestador. El chequeo del plan no implica tratamientos dentales incluidos.'
+  }
 ];
-const plans=[{id:'solidario',name:'Solidario',price:'4,99',tag:'Para empezar a cuidarte',items:['2 consultas de medicina al mes','30% de descuento en laboratorio','30% de descuento en ecografías','1 consulta de nutrición al mes','1 chequeo odontológico gratis','1 chequeo visual gratis'],desc:'Una opción accesible para acompañar tu atención y prevención.'},{id:'corporativo',name:'Corporativo',price:'9,99',tag:'Más beneficios de bienestar',items:['Consultas médicas ilimitadas','1 consulta de psicología al mes','1 consulta de nutrición al mes','30% de descuento en laboratorio','30% de descuento en ecografías','10% de descuento con especialistas','1 chequeo odontológico gratis','1 laboratorio gratis al año, después de 6 meses de afiliación'],desc:'Consultas, nutrición, psicología y descuentos para tu bienestar.'},{id:'familiar',name:'Familiar',price:'14,99',tag:'Bienestar para tu familia',items:['Consultas ilimitadas y prioritarias','2 consultas de psicología al mes','1 consulta de nutrición al mes','30% de descuento en laboratorio','30% de descuento en ecografías','10% de descuento con especialistas','1 chequeo odontológico gratis','1 chequeo visual gratis','1 ecografía básica anual, después de 6 meses de afiliación','2 laboratorios gratis al año, después de 6 meses de afiliación'],desc:'Conoce sus beneficios y consulta cómo afiliar a los beneficiarios.'}];
-const serviceTiles=()=>`<div class="ms-grid">${services.map(s=>`<article class="ms-tile"><span class="ms-icon">${icon(s.icon)}</span><h3>${s.name}</h3><p>${s.desc}</p>${link('Ver servicio','servicio-'+s.id)}</article>`).join('')}</div>`;
-const planTiles=(full=false)=>`<div class="ms-grid">${plans.map((p,i)=>`<article class="ms-tile ms-plan ${i===1?'focus':''}"><span class="ms-eyebrow">${p.tag}</span><h3>Plan ${p.name}</h3><div class="ms-price">$${p.price} <small>/ mes</small></div><ul>${(full?p.items:p.items.slice(0,3)).map(x=>`<li>${x}</li>`).join('')}</ul>${btn('Conocer beneficios','plan-'+p.id,i===1?'':'alt')}</article>`).join('')}</div>`;
-const steps=(items)=>`<div class="ms-grid">${items.map((s,i)=>`<div class="ms-step"><span class="ms-num">${i+1}</span><h3>${s[0]}</h3><p>${s[1]}</p></div>`).join('')}</div>`;
-const businessBanner=()=>`<div class="ms-banner"><div><span class="ms-tag">Salud ocupacional</span><h2>El bienestar de tu equipo también cuenta.</h2><p>Evaluaciones, laboratorio, brigadas y programas de prevención según las necesidades de tu empresa.</p>${btn('Conocer soluciones empresariales','empresas','light')}</div><div><span class="ms-icon">${icon('truck')}</span><h3 style="color:white">Atención que se acerca</h3><p>Consulta nuestras opciones de brigadas y unidad móvil.</p></div></div>`;
-const form=(type,pre='')=>`<form data-form="${type}" class="ms-contactbox"><span class="ms-eyebrow">${type==='empresa'?'Hablemos de tu equipo':type==='plan'?'Conoce tus beneficios':'Coordinemos tu atención'}</span><h3>${type==='empresa'?'Solicitar una propuesta':type==='plan'?'Quiero información':'Solicitar cita'}</h3><label>Nombre<input name="nombre" placeholder="Tu nombre" required autocomplete="off"></label>${type==='empresa'?'<label>Empresa<input name="empresa" placeholder="Nombre de la empresa" required></label><label>Correo corporativo<input name="correo" type="email" placeholder="nombre@empresa.com" required></label>':''}<label>Celular<input name="celular" type="tel" placeholder="Número de contacto" required></label>${type==='empresa'?'<div class="ms-grid two"><label>Ciudad<input name="ciudad" placeholder="Ciudad" required></label><label>Colaboradores<select name="colaboradores"><option>1 a 20</option><option>21 a 50</option><option>51 a 100</option><option>Más de 100</option></select></label></div>':''}<label>${type==='plan'?'Plan de interés':'Servicio de interés'}<select name="interes">${(type==='plan'?plans.map(p=>'Plan '+p.name):type==='empresa'?['Evaluaciones ocupacionales','Brigada médica','Unidad móvil','Laboratorio ocupacional','Convenio integral']:services.map(s=>s.name)).map(x=>`<option ${x===pre?'selected':''}>${x}</option>`).join('')}</select></label><label><input type="checkbox" required>He leído el aviso de privacidad.</label>${type==='empresa'?'<p class="ms-note">El alcance y las fechas se definirán en la propuesta.</p>':''}<button class="ms-btn" type="submit">${type==='empresa'?'Solicitar propuesta':type==='plan'?'Solicitar información':'Solicitar cita'}</button><p class="ms-note">Demostración: no ingreses datos personales reales.</p><div class="ms-feedback" role="status"></div></form>`;
-const compare=()=>`<div class="ms-tablewrap"><table><thead><tr><th>Beneficio</th><th>Solidario</th><th>Corporativo</th><th>Familiar</th></tr></thead><tbody>${[['Cuota mensual','$4,99','$9,99','$14,99'],['Consultas médicas','2 al mes','Ilimitadas','Ilimitadas y prioritarias'],['Laboratorio y ecografías','30% descuento','30% descuento','30% descuento'],['Especialistas','Por confirmar','10% descuento','10% descuento'],['Nutrición','1 al mes','1 al mes','1 al mes'],['Psicología','Por confirmar','1 al mes','2 al mes'],['Chequeo odontológico','1 gratis*','1 gratis*','1 gratis*'],['Chequeo visual','1 gratis*','Por confirmar','1 gratis*'],['Laboratorio anual incluido','Por confirmar','1 después de 6 meses','2 después de 6 meses'],['Ecografía básica anual','Por confirmar','Por confirmar','1 después de 6 meses']].map(row=>`<tr>${row.map(x=>`<td>${x}</td>`).join('')}</tr>`).join('')}</tbody></table></div><p class="ms-note">*Periodicidad por confirmar. Los beneficios no descritos en el folleto y el número de beneficiarios del Familiar requieren definición antes de publicar.</p>`;
-function home(){return `<div class="ms-hero"><div><span class="ms-tag">Centro médico y laboratorio clínico · Quito</span><h1>La salud al<br>alcance de todos.</h1><p>Consultas, exámenes y chequeos para cuidar de ti. Elige tu servicio de forma individual o descubre nuestros planes de bienestar.</p><div class="ms-actions">${btn('Encontrar mi servicio','servicios','light')}${btn('Ver planes desde $4,99','planes','ghost')}</div><small>Puedes atenderte sin contratar un plan.</small></div><div class="ms-art"><span style="font-size:12px;letter-spacing:1px">SALUD · PREVENCIÓN · BIENESTAR</span><div class="ms-bigicon">${icon('heart-pulse')}</div><h3>Cuidarte empieza aquí.</h3><p>Una consulta. Un chequeo.<br>Un paso hacia tu bienestar.</p><div class="ms-art-bottom">${icon('calendar-check')}<span>Elige tu atención<br><strong>Nosotros te ayudamos a coordinarla.</strong></span></div></div></div><div class="ms-trust"><span>${icon('stethoscope')} Servicios individuales</span><span>${icon('heart-handshake')} Planes accesibles</span><span>${icon('building-2')} Atención empresarial</span></div>`+sec('Nuestros servicios','¿Qué atención necesitas?','Encuentra tu servicio y consulta su tarifa y disponibilidad, sin necesidad de afiliarte.',serviceTiles())+sec('Planes de bienestar','Más beneficios para cuidar de ti.','Elige entre tres opciones de cuota mensual y conoce sus servicios incluidos y descuentos.',planTiles()+`<div class="ms-actions">${link('Comparar todos los beneficios','planes')}</div>` ,true)+`<section class="ms-sec">${businessBanner()}</section>`+sec('Así de sencillo','Tu atención, paso a paso.','',steps([['Elige tu servicio','Busca la consulta, examen o chequeo que necesitas.'],['Contacta a Mundisalud','Consulta el precio y la disponibilidad de atención.'],['Confirma tu cita','Nuestro equipo te ayuda a coordinar la visita.']]))+sec('Estamos cerca','Visítanos en La Pradera.','Cristóbal de Acuña N29B y Juan de Agama, Quito.',`<div class="ms-actions">${btn('Ver ubicación y contacto','contacto')}${btn('Conoce Mundisalud','nosotros','alt')}</div>`,true)+sec('Resolvemos tus dudas','Antes de tu visita','',faq('¿Puedo atenderme sin un plan?','Sí. Puedes contratar cada servicio por separado y consultar su tarifa individual.')+faq('¿Qué aportan los planes?','Acceso a los beneficios y descuentos específicos de cada opción, según sus condiciones.')+faq('¿Mi cita queda confirmada al solicitarla?','El equipo debe confirmar disponibilidad, fecha y horario.'))}
-function servicePage(id){const s=services.find(x=>x.id===id);if(!s)return home();return bread('Servicios / '+s.name)+heading('Servicio individual',s.title,s.detail)+`<section class="ms-sec"><div class="ms-split"><div><span class="ms-icon">${icon(s.icon)}</span><h2>${s.name}</h2><div class="ms-pills"><span class="ms-pill">Atención sin plan</span><span class="ms-pill">Consultar tarifa individual</span></div><h3>¿Qué puedes consultar?</h3><ul class="ms-list">${s.items.map(x=>`<li>${x}</li>`).join('')}</ul><p class="ms-note">${s.note}</p></div>${form('cita',s.name)}</div></section>`+sec('Tu visita','Cómo coordinar tu atención','',steps([['Cuéntanos qué necesitas','Selecciona el servicio y consulta su disponibilidad.'],['Confirma los detalles','Recibe información de tarifa, modalidad y preparación.'],['Acude a tu cita','Sigue las indicaciones confirmadas por el equipo.']]),true)+sec('Planes de bienestar','¿Te interesa conocer más beneficios?','Revisa si el servicio que buscas forma parte de alguno de nuestros planes.',btn('Explorar planes','planes','alt'))+sec('Más opciones','Otros servicios para ti','',`<div class="ms-pills">${services.filter(x=>x.id!==id).map(x=>link(x.name,'servicio-'+x.id)).join('')}</div>`)}
-function planPage(id){const p=plans.find(x=>x.id===id);if(!p)return home();return bread('Planes / '+p.name)+heading('Plan de bienestar','Plan '+p.name,p.desc)+`<section class="ms-sec"><div class="ms-split"><div><div class="ms-price">$${p.price} <small>al mes</small></div><h2>Conoce tus beneficios.</h2><ul class="ms-list">${p.items.map(x=>`<li>${x}</li>`).join('')}</ul><p class="ms-note">Consulta alcance de las consultas, servicios elegibles, activación y condiciones. La periodicidad de chequeos debe confirmarse.</p>${id==='familiar'?'<p class="ms-note">Número de beneficiarios y distribución de beneficios pendientes de definición comercial.</p>':''}${id==='corporativo'?'<p class="ms-note">Consulta los requisitos de contratación. La salud ocupacional y las brigadas se cotizan por separado.</p>':''}${link('Comparar con otros planes','planes')}</div>${form('plan','Plan '+p.name)}</div></section>`+sec('Cómo empezar','Te acompañamos en tu elección.','',steps([['Consulta el plan','Conoce los beneficios y requisitos.'],['Revisa las condiciones','Confirma beneficiarios, activación y formas de pago.'],['Coordina tu afiliación','El equipo te indicará cómo completar el proceso.']]),true)+sec('Condiciones','Información antes de afiliarte','',faq('¿Cuándo puedo utilizar los beneficios?','La activación debe confirmarse. Los beneficios anuales señalados en los planes Corporativo y Familiar requieren seis meses de afiliación.')+faq('¿Qué incluyen los chequeos gratuitos?','Su alcance y periodicidad deben quedar definidos en las condiciones vigentes del plan.')+link('Ver condiciones del plan','condiciones'))+sec('También sin afiliación','Puedes solicitar servicios por separado.','Consulta y agenda atención individual cuando la necesites.',btn('Ver servicios médicos','servicios','alt'),true)}
-function servicesPage(){return bread('Servicios médicos')+heading('Atención para personas y familias','Tu servicio. Tu atención.','Consultas, exámenes y chequeos por separado. No necesitas contratar un plan para atenderte en Mundisalud.')+sec('Encuentra tu atención','Servicios médicos y diagnóstico','Selecciona una opción para ver cómo solicitarla.',serviceTiles())+sec('Atención especializada','Encuentra la especialidad que necesitas.','Consulta las especialidades habilitadas y sus horarios con nuestro equipo.',`<div class="ms-pills">${['Medicina general','Ginecología y obstetricia','Pediatría','Traumatología','Cardiología','Urología','Otorrinolaringología','Psicología','Nutrición','Optometría'].map(x=>`<span class="ms-pill">${x}</span>`).join('')}</div>${btn('Consultar disponibilidad','servicio-consultas')}`,true)+sec('Modalidades de atención','Te ayudamos a coordinar tu servicio.','',`<div class="ms-grid two"><div class="ms-tile"><span class="ms-icon">${icon('hospital')}</span><h3>En nuestro centro</h3><p>Consulta horarios y disponibilidad para los servicios prestados en Mundisalud.</p></div><div class="ms-tile"><span class="ms-icon">${icon('network')}</span><h3>Mediante servicios especializados</h3><p>Coordinación de atención externa según servicio, prestador y ciudad confirmados.</p></div></div>`)+sec('Más beneficios','Conoce nuestros planes de bienestar.','Además de la atención individual, puedes elegir un plan con beneficios específicos desde $4,99 al mes.',btn('Comparar planes','planes'),true)}
-function plansPage(){return bread('Planes de bienestar')+heading('Nuestro valor agregado','Tres formas de cuidar tu bienestar.','Conoce los precios, beneficios y condiciones. También puedes solicitar cualquier servicio disponible de forma individual.')+sec('Elige tu opción','Planes de bienestar','Cuotas mensuales en dólares de Estados Unidos.',planTiles(true))+sec('Compara con claridad','¿Qué incluye cada plan?','',compare(),true)+sec('Antes de afiliarte','Conoce las condiciones','',faq('¿Las consultas ilimitadas incluyen todas las especialidades?','El alcance debe confirmarse. No debe interpretarse que todas las especialidades están incluidas.')+faq('¿Cuántas personas incluye el Familiar?','Este dato debe completarse con la definición comercial antes de publicar la oferta.')+faq('¿Los beneficios anuales están disponibles desde el primer mes?','Los beneficios anuales indicados en Corporativo y Familiar se habilitan después de seis meses de afiliación.')+link('Consultar condiciones completas','condiciones'))+sec('Tú eliges','También puedes atenderte sin un plan.','Consulta tarifas individuales y coordina el servicio que necesitas.',btn('Explorar servicios','servicios','alt'),true)}
-function enterprise(){let offers=[['clipboard-check','Evaluaciones ocupacionales','Ingreso, periódicas y de retiro.'],['flask-conical','Laboratorio ocupacional','Pruebas según los requerimientos de la evaluación.'],['truck','Brigadas y unidad móvil','Consulta jornadas en las instalaciones de tu empresa.'],['shield-plus','Campañas preventivas','Prevención y promoción de la salud.'],['presentation','Charlas y capacitaciones','Actividades coordinadas para tu equipo.'],['stethoscope','Atención especializada','Derivación y seguimiento según disponibilidad.']];return bread('Para empresas')+`<div class="ms-hero"><div><span class="ms-tag">Mundisalud empresas</span><h1>Salud para tu equipo.<br>Soluciones para tu empresa.</h1><p>Coordinamos atención médica, evaluaciones ocupacionales y programas preventivos según las necesidades de tu organización.</p>${btn('Solicitar propuesta','cotizacion','light')}</div><div class="ms-art"><span class="ms-eyebrow">Atención coordinada</span><div class="ms-bigicon">${icon('truck')}</div><h3>Más cerca de tu equipo.</h3><p>Brigadas · Unidad móvil · Prevención</p><div class="ms-art-bottom">${icon('building-2')}En nuestro centro o en tu empresa.</div></div></div>`+sec('Servicios empresariales','Una propuesta a la medida de tu operación.','',`<div class="ms-grid">${offers.map(x=>`<div class="ms-tile"><span class="ms-icon">${icon(x[0])}</span><h3>${x[1]}</h3><p>${x[2]}</p>${link('Consultar propuesta','cotizacion')}</div>`).join('')}</div>`)+sec('Unidad móvil','Acercamos la atención a tu empresa.','Consulta los servicios disponibles, requisitos logísticos y cobertura de nuestras jornadas.',`<div class="ms-grid two"><div class="ms-tile"><h3>En Mundisalud</h3><p>Organización de citas y atención en nuestras instalaciones.</p></div><div class="ms-tile"><h3>En tu empresa</h3><p>Brigadas y atención extramural sujetas a coordinación y disponibilidad.</p></div></div>`,true)+sec('Coordinación empresarial','Construyamos una propuesta para tu equipo.','',steps([['Comparte tu necesidad','Ciudad, número de colaboradores y servicios.'],['Definimos el alcance','Modalidad, jornadas y propuesta económica.'],['Coordinamos la atención','Organización de fechas y ejecución acordada.']])+btn('Cotizar servicios empresariales','cotizacion'))+sec('Planes de bienestar','Conoce también el Plan Corporativo.','Una oferta distinta de las evaluaciones ocupacionales y los convenios a medida.',btn('Ver Plan Corporativo','plan-corporativo','alt'),true)+sec('Conversemos','¿Qué necesita tu empresa?','',form('empresa'))}
-function about(){return bread('Nosotros')+heading('Conoce Mundisalud','Un equipo comprometido con tu bienestar.','Somos un centro de especialidades médicas y laboratorio clínico enfocado en atención, prevención y diagnóstico.')+sec('Nuestro propósito','La salud al alcance de todos.','Acercamos servicios médicos a personas, familias y empresas mediante atención individual, planes de bienestar y propuestas empresariales.',`<div class="ms-grid"><div class="ms-tile"><span class="ms-icon">${icon('heart-handshake')}</span><h3>Atención respetuosa</h3><p>Orientación clara para coordinar tu atención.</p></div><div class="ms-tile"><span class="ms-icon">${icon('shield-plus')}</span><h3>Prevención</h3><p>Servicios y chequeos para acompañar tu bienestar.</p></div><div class="ms-tile"><span class="ms-icon">${icon('stethoscope')}</span><h3>Atención integral</h3><p>Consultas, especialidades y apoyo diagnóstico.</p></div></div>`)+sec('Nuestro equipo','Conoce a quienes te atenderán.','',`<div class="ms-grid">${['Medicina general','Especialidades médicas','Laboratorio clínico'].map(x=>`<div class="ms-tile"><div class="ms-outline">${icon('user-round')}<p>Fotografía del profesional</p></div><h3>${x}</h3><p>Espacio para nombre y credenciales verificadas.</p></div>`).join('')}</div>`,true)+sec('Nuestras instalaciones','Un espacio para cuidar de ti.','',`<div class="ms-grid two"><div class="ms-outline">${icon('hospital')}<p>Fotografía real del centro médico</p></div><div class="ms-outline">${icon('flask-conical')}<p>Fotografía real del laboratorio</p></div></div><div class="ms-actions">${btn('Ubicación y contacto','contacto')}${btn('Ver nuestros servicios','servicios','alt')}</div>`)}
-function contact(){return bread('Contacto')+heading('Estamos para orientarte','Cuéntanos qué atención necesitas.','Solicita una cita individual, consulta nuestros planes o coordina una propuesta para tu empresa.')+`<section class="ms-sec"><div class="ms-split"><div><h2>Visítanos en Quito.</h2><p>Cristóbal de Acuña N29B y Juan de Agama.<br>Sector estación de Metro La Pradera.</p><div class="ms-outline">${icon('map-pin')}<h3>Ubicación del centro médico</h3><p>Mapa y pin oficial por incorporar.</p></div><h3>Canales de atención</h3><p class="ms-note">WhatsApp, teléfono, correo y horarios oficiales por confirmar.</p><div class="ms-actions">${btn('Consultar un plan','planes','alt')}${btn('Soy empresa','cotizacion','alt')}</div></div>${form('cita')}</div></section>`+sec('Antes de enviar','Coordinemos tu visita','',faq('¿Necesito estar afiliado?','No. Puedes solicitar los servicios por separado.')+faq('¿Cuándo se confirma la cita?','Cuando el equipo de Mundisalud confirme contigo la fecha y disponibilidad.'))}
-function conditions(){return bread('Condiciones de planes')+heading('Información comercial','Beneficios claros, decisiones informadas.','Revisa el precio, servicios incluidos y condiciones de la opción que te interesa.')+sec('Los tres planes','Cuotas y beneficios','',planTiles())+sec('Activación y uso','Condiciones que deben quedar definidas','',faq('Beneficios después de seis meses','Corporativo: un laboratorio anual. Familiar: dos laboratorios y una ecografía básica anual, según el folleto.')+faq('Beneficiarios y alcance','Pendiente de definición: número de beneficiarios del Familiar, distribución de beneficios, elegibilidad del Corporativo y alcance de las consultas.')+faq('Chequeos, descuentos y tarifas','Pendiente de definición: periodicidad de chequeos, pruebas incluidas, servicios elegibles y base de descuentos.')+faq('Pago, renovación y cancelación','Espacio para las condiciones comerciales aprobadas antes del lanzamiento.'),true)}
-function privacy(){return bread('Privacidad')+heading('Tus datos','Información sobre privacidad','Espacio reservado para el aviso aprobado de Mundisalud.')+sec('Aviso de privacidad','Contenido por completar antes de publicar','',`<ul class="ms-list"><li>Identidad y contacto del responsable.</li><li>Datos solicitados y finalidad del contacto.</li><li>Base de tratamiento, destinatarios y conservación.</li><li>Canales para ejercer derechos.</li><li>Preferencias de comunicaciones y tecnologías opcionales.</li></ul><p class="ms-note">Esta maqueta no envía ni guarda los datos escritos en los formularios.</p>`)}
-function render(page){let out;if(page.startsWith('servicio-'))out=servicePage(page.slice(9));else if(page.startsWith('plan-'))out=planPage(page.slice(5));else out=({inicio:home,servicios:servicesPage,planes:plansPage,empresas:enterprise,nosotros:about,contacto:contact,condiciones:conditions,privacidad:privacy,cotizacion:()=>bread('Empresas / Cotización')+heading('Hablemos de tu empresa','Solicita una propuesta empresarial.','Cuéntanos qué necesita tu equipo para coordinar una propuesta de atención.')+sec('Cotización','Datos de contacto y alcance','',form('empresa'))}[page]||home)();main.innerHTML=out;main.setAttribute('aria-label','Página '+page);root.querySelectorAll('nav button').forEach(b=>{let selected=b.dataset.page===page||(page.startsWith('servicio-')&&b.dataset.page==='servicios')||(page.startsWith('plan-')&&b.dataset.page==='planes')||(page==='cotizacion'&&b.dataset.page==='empresas');if(selected)b.setAttribute('aria-current','page');else b.removeAttribute('aria-current')});if(typeof lucide!=='undefined')lucide.createIcons({attrs:{width:20,height:20}})}
-root.addEventListener('click',e=>{const b=e.target.closest('[data-page]');if(b&&root.contains(b)){render(b.dataset.page);root.scrollIntoView({behavior:'instant',block:'start'})}});
-root.addEventListener('submit',e=>{if(e.target.matches('[data-form]')){e.preventDefault();e.target.querySelector('.ms-feedback').innerHTML='<div class="ms-status">Vista de confirmación: recibimos tu solicitud. En la web final, el equipo coordinará los detalles. Esta demostración no envió ningún dato.</div>'}});
+
+/* ---------- PLANES ----------
+   price = precio mensual (texto)
+   tag   = frase pequeña sobre el título
+   items = beneficios (en las tarjetas del inicio solo se ven los 3 primeros)
+   OJO: la tabla comparativa está aparte, en compare() (sección 3.3). */
+const plans = [
+  {
+    id: 'solidario', name: 'Solidario', price: '4,99',
+    tag: 'Para empezar a cuidarte',
+    desc: 'Una opción accesible para acompañar tu atención y prevención.',
+    items: [
+      '2 consultas de medicina al mes',
+      '30% de descuento en laboratorio',
+      '30% de descuento en ecografías',
+      '1 consulta de nutrición al mes',
+      '1 chequeo odontológico gratis',
+      '1 chequeo visual gratis'
+    ]
+  },
+  {
+    id: 'corporativo', name: 'Corporativo', price: '9,99',
+    tag: 'Más beneficios de bienestar',
+    desc: 'Consultas, nutrición, psicología y descuentos para tu bienestar.',
+    items: [
+      'Consultas médicas ilimitadas',
+      '1 consulta de psicología al mes',
+      '1 consulta de nutrición al mes',
+      '30% de descuento en laboratorio',
+      '30% de descuento en ecografías',
+      '10% de descuento con especialistas',
+      '1 chequeo odontológico gratis',
+      '1 laboratorio gratis al año, después de 6 meses de afiliación'
+    ]
+  },
+  {
+    id: 'familiar', name: 'Familiar', price: '14,99',
+    tag: 'Bienestar para tu familia',
+    desc: 'Conoce sus beneficios y consulta cómo afiliar a los beneficiarios.',
+    items: [
+      'Consultas ilimitadas y prioritarias',
+      '2 consultas de psicología al mes',
+      '1 consulta de nutrición al mes',
+      '30% de descuento en laboratorio',
+      '30% de descuento en ecografías',
+      '10% de descuento con especialistas',
+      '1 chequeo odontológico gratis',
+      '1 chequeo visual gratis',
+      '1 ecografía básica anual, después de 6 meses de afiliación',
+      '2 laboratorios gratis al año, después de 6 meses de afiliación'
+    ]
+  }
+];
+
+
+/* ============================================================
+   3.3 COMPONENTES: bloques que se repiten en varias páginas
+   ============================================================ */
+
+// Tarjetas de servicios
+const serviceTiles = () => `
+  <div class="ms-grid">
+    ${services.map(s => `
+      <article class="ms-tile">
+        <span class="ms-icon">${icon(s.icon)}</span>
+        <h3>${s.name}</h3>
+        <p>${s.desc}</p>
+        ${link('Ver servicio', 'servicio-' + s.id)}
+      </article>`).join('')}
+  </div>`;
+
+// Tarjetas de planes. full=true muestra todos los beneficios; false solo 3.
+const planTiles = (full = false) => `
+  <div class="ms-grid">
+    ${plans.map((p, i) => `
+      <article class="ms-tile ms-plan ${i === 1 ? 'focus' : ''}">
+        <span class="ms-eyebrow">${p.tag}</span>
+        <h3>Plan ${p.name}</h3>
+        <div class="ms-price">$${p.price} <small>/ mes</small></div>
+        <ul>${(full ? p.items : p.items.slice(0, 3)).map(x => `<li>${x}</li>`).join('')}</ul>
+        ${btn('Conocer beneficios', 'plan-' + p.id, i === 1 ? '' : 'alt')}
+      </article>`).join('')}
+  </div>`;
+
+// Pasos numerados. Recibe una lista de [título, texto]
+const steps = items => `
+  <div class="ms-grid">
+    ${items.map((s, i) => `
+      <div class="ms-step">
+        <span class="ms-num">${i + 1}</span>
+        <h3>${s[0]}</h3>
+        <p>${s[1]}</p>
+      </div>`).join('')}
+  </div>`;
+
+// Banner azul de empresas (en el inicio)
+const businessBanner = () => `
+  <div class="ms-banner">
+    <div>
+      <span class="ms-tag">Salud ocupacional</span>
+      <h2>El bienestar de tu equipo también cuenta.</h2>
+      <p>Evaluaciones, laboratorio, brigadas y programas de prevención según las necesidades de tu empresa.</p>
+      ${btn('Conocer soluciones empresariales', 'empresas', 'light')}
+    </div>
+    <div>
+      <span class="ms-icon">${icon('truck')}</span>
+      <h3 style="color:white">Atención que se acerca</h3>
+      <p>Consulta nuestras opciones de brigadas y unidad móvil.</p>
+    </div>
+  </div>`;
+
+
+/* ---------- FORMULARIO ----------
+   type = 'cita' (servicios y contacto), 'plan' o 'empresa'
+   pre  = opción que aparece seleccionada en la lista
+
+   Para agregar un campo nuevo: copia una línea de campo(...)
+   dentro de "camposPersona" (cita y plan) o "camposEmpresa".
+   campo(etiqueta, name, placeholder, tipo)                       */
+const campo = (etiqueta, name, placeholder, tipo = 'text', extra = '') =>
+  `<label>${etiqueta}<input name="${name}" type="${tipo}" placeholder="${placeholder}" ${extra} required></label>`;
+
+const form = (type, pre = '') => {
+  const esEmpresa = type === 'empresa';
+  const esPlan = type === 'plan';
+
+  // Textos que cambian según el tipo de formulario
+  const subtitulo = esEmpresa ? 'Hablemos de tu equipo' : esPlan ? 'Conoce tus beneficios' : 'Coordinemos tu atención';
+  const titulo    = esEmpresa ? 'Solicitar una propuesta' : esPlan ? 'Quiero información' : 'Solicitar cita';
+  const boton     = esEmpresa ? 'Solicitar propuesta' : esPlan ? 'Solicitar información' : 'Solicitar cita';
+  const etiquetaInteres = esPlan ? 'Plan de interés' : 'Servicio de interés';
+
+  // Opciones de la lista desplegable
+  const opciones = esPlan
+    ? plans.map(p => 'Plan ' + p.name)
+    : esEmpresa
+      ? ['Evaluaciones ocupacionales', 'Brigada médica', 'Unidad móvil', 'Laboratorio ocupacional', 'Convenio integral']
+      : services.map(s => s.name);
+
+  // Campos extra solo para EMPRESAS (van después del nombre)
+  const camposEmpresa = esEmpresa
+    ? campo('Empresa', 'empresa', 'Nombre de la empresa') +
+      campo('Correo corporativo', 'correo', 'nombre@empresa.com', 'email')
+    : '';
+
+  // Campos extra solo para CITA y PLAN (van después del nombre)
+  const camposPersona = !esEmpresa
+    ? campo('Correo', 'correo', 'tucorreo@ejemplo.com', 'email')
+    : '';
+
+  // Ciudad y colaboradores (solo empresas, después del celular)
+  const ciudadColaboradores = esEmpresa ? `
+    <div class="ms-grid two">
+      <label>Ciudad<input name="ciudad" placeholder="Ciudad" required></label>
+      <label>Colaboradores
+        <select name="colaboradores">
+          <option>1 a 20</option><option>21 a 50</option><option>51 a 100</option><option>Más de 100</option>
+        </select>
+      </label>
+    </div>` : '';
+
+  return `
+  <form data-form="${type}" class="ms-contactbox">
+    <span class="ms-eyebrow">${subtitulo}</span>
+    <h3>${titulo}</h3>
+
+    <label>Nombre<input name="nombre" placeholder="Tu nombre" required autocomplete="off"></label>
+    ${camposEmpresa}
+    ${camposPersona}
+    ${campo('Celular', 'celular', 'Número de contacto', 'tel')}
+    ${ciudadColaboradores}
+
+    <label>${etiquetaInteres}
+      <select name="interes">
+        ${opciones.map(x => `<option ${x === pre ? 'selected' : ''}>${x}</option>`).join('')}
+      </select>
+    </label>
+
+    <label><input type="checkbox" required>He leído el aviso de privacidad.</label>
+    ${esEmpresa ? '<p class="ms-note">El alcance y las fechas se definirán en la propuesta.</p>' : ''}
+
+    <button class="ms-btn" type="submit">${boton}</button>
+    <p class="ms-note">Demostración: no ingreses datos personales reales.</p>
+    <div class="ms-feedback" role="status"></div>
+  </form>`;
+};
+
+
+/* ---------- TABLA COMPARATIVA DE PLANES ----------
+   Cada fila: [beneficio, Solidario, Corporativo, Familiar]    */
+const compare = () => `
+  <div class="ms-tablewrap">
+    <table>
+      <thead>
+        <tr><th>Beneficio</th><th>Solidario</th><th>Corporativo</th><th>Familiar</th></tr>
+      </thead>
+      <tbody>
+        ${[
+          ['Cuota mensual',             '$4,99',         '$9,99',                '$14,99'],
+          ['Consultas médicas',         '2 al mes',      'Ilimitadas',           'Ilimitadas y prioritarias'],
+          ['Laboratorio y ecografías',  '30% descuento', '30% descuento',        '30% descuento'],
+          ['Especialistas',             'Por confirmar', '10% descuento',        '10% descuento'],
+          ['Nutrición',                 '1 al mes',      '1 al mes',             '1 al mes'],
+          ['Psicología',                'Por confirmar', '1 al mes',             '2 al mes'],
+          ['Chequeo odontológico',      '1 gratis*',     '1 gratis*',            '1 gratis*'],
+          ['Chequeo visual',            '1 gratis*',     'Por confirmar',        '1 gratis*'],
+          ['Laboratorio anual incluido','Por confirmar', '1 después de 6 meses', '2 después de 6 meses'],
+          ['Ecografía básica anual',    'Por confirmar', 'Por confirmar',        '1 después de 6 meses']
+        ].map(row => `<tr>${row.map(x => `<td>${x}</td>`).join('')}</tr>`).join('')}
+      </tbody>
+    </table>
+  </div>
+  <p class="ms-note">*Periodicidad por confirmar. Los beneficios no descritos en el folleto y el número de beneficiarios del Familiar requieren definición antes de publicar.</p>`;
+
+
+/* ============================================================
+   3.4 PÁGINAS: una función por página, de arriba hacia abajo
+   Cada "sec(...)" es una sección. Se unen con +
+   ============================================================ */
+
+/* ---------- INICIO ---------- */
+function home() {
+
+  // Portada con tarjeta celeste
+  const portada = `
+    <div class="ms-hero">
+      <div>
+        <span class="ms-tag">Centro médico y laboratorio clínico · Quito</span>
+        <h1>La salud al<br>alcance de todos.</h1>
+        <p>Consultas, exámenes y chequeos para cuidar de ti. Elige tu servicio de forma individual o descubre nuestros planes de bienestar.</p>
+        <div class="ms-actions">
+          ${btn('Encontrar mi servicio', 'servicios', 'light')}
+          ${btn('Ver planes desde $4,99', 'planes', 'ghost')}
+        </div>
+        <small>Puedes atenderte sin contratar un plan.</small>
+      </div>
+      <div class="ms-art">
+        <span style="font-size:12px;letter-spacing:1px">SALUD · PREVENCIÓN · BIENESTAR</span>
+        <div class="ms-bigicon">${icon('heart-pulse')}</div>
+        <h3>Cuidarte empieza aquí.</h3>
+        <p>Una consulta. Un chequeo.<br>Un paso hacia tu bienestar.</p>
+        <div class="ms-art-bottom">
+          ${icon('calendar-check')}
+          <span>Elige tu atención<br><strong>Nosotros te ayudamos a coordinarla.</strong></span>
+        </div>
+      </div>
+    </div>`;
+
+  // Franja de tres íconos
+  const confianza = `
+    <div class="ms-trust">
+      <span>${icon('stethoscope')} Servicios individuales</span>
+      <span>${icon('heart-handshake')} Planes accesibles</span>
+      <span>${icon('building-2')} Atención empresarial</span>
+    </div>`;
+
+  return portada + confianza
+
+    + sec('Nuestros servicios', '¿Qué atención necesitas?',
+        'Encuentra tu servicio y consulta su tarifa y disponibilidad, sin necesidad de afiliarte.',
+        serviceTiles())
+
+    + sec('Planes de bienestar', 'Más beneficios para cuidar de ti.',
+        'Elige entre tres opciones de cuota mensual y conoce sus servicios incluidos y descuentos.',
+        planTiles() + `<div class="ms-actions">${link('Comparar todos los beneficios', 'planes')}</div>`,
+        true)
+
+    + `<section class="ms-sec">${businessBanner()}</section>`
+
+    + sec('Así de sencillo', 'Tu atención, paso a paso.', '',
+        steps([
+          ['Elige tu servicio', 'Busca la consulta, examen o chequeo que necesitas.'],
+          ['Contacta a Mundisalud', 'Consulta el precio y la disponibilidad de atención.'],
+          ['Confirma tu cita', 'Nuestro equipo te ayuda a coordinar la visita.']
+        ]))
+
+    + sec('Estamos cerca', 'Visítanos en La Pradera.',
+        'Cristóbal de Acuña N29B y Juan de Agama, Quito.',
+        `<div class="ms-actions">${btn('Ver ubicación y contacto', 'contacto')}${btn('Conoce Mundisalud', 'nosotros', 'alt')}</div>`,
+        true)
+
+    + sec('Resolvemos tus dudas', 'Antes de tu visita', '',
+        faq('¿Puedo atenderme sin un plan?', 'Sí. Puedes contratar cada servicio por separado y consultar su tarifa individual.')
+      + faq('¿Qué aportan los planes?', 'Acceso a los beneficios y descuentos específicos de cada opción, según sus condiciones.')
+      + faq('¿Mi cita queda confirmada al solicitarla?', 'El equipo debe confirmar disponibilidad, fecha y horario.'));
+}
+
+
+/* ---------- PÁGINA DE UN SERVICIO (usa los datos de "services") ---------- */
+function servicePage(id) {
+  const s = services.find(x => x.id === id);
+  if (!s) return home();
+
+  const detalle = `
+    <section class="ms-sec">
+      <div class="ms-split">
+        <div>
+          <span class="ms-icon">${icon(s.icon)}</span>
+          <h2>${s.name}</h2>
+          <div class="ms-pills">
+            <span class="ms-pill">Atención sin plan</span>
+            <span class="ms-pill">Consultar tarifa individual</span>
+          </div>
+          <h3>¿Qué puedes consultar?</h3>
+          <ul class="ms-list">${s.items.map(x => `<li>${x}</li>`).join('')}</ul>
+          <p class="ms-note">${s.note}</p>
+        </div>
+        ${form('cita', s.name)}
+      </div>
+    </section>`;
+
+  return bread('Servicios / ' + s.name)
+    + heading('Servicio individual', s.title, s.detail)
+    + detalle
+
+    + sec('Tu visita', 'Cómo coordinar tu atención', '',
+        steps([
+          ['Cuéntanos qué necesitas', 'Selecciona el servicio y consulta su disponibilidad.'],
+          ['Confirma los detalles', 'Recibe información de tarifa, modalidad y preparación.'],
+          ['Acude a tu cita', 'Sigue las indicaciones confirmadas por el equipo.']
+        ]),
+        true)
+
+    + sec('Planes de bienestar', '¿Te interesa conocer más beneficios?',
+        'Revisa si el servicio que buscas forma parte de alguno de nuestros planes.',
+        btn('Explorar planes', 'planes', 'alt'))
+
+    + sec('Más opciones', 'Otros servicios para ti', '',
+        `<div class="ms-pills">${services.filter(x => x.id !== id).map(x => link(x.name, 'servicio-' + x.id)).join('')}</div>`);
+}
+
+
+/* ---------- PÁGINA DE UN PLAN (usa los datos de "plans") ---------- */
+function planPage(id) {
+  const p = plans.find(x => x.id === id);
+  if (!p) return home();
+
+  const detalle = `
+    <section class="ms-sec">
+      <div class="ms-split">
+        <div>
+          <div class="ms-price">$${p.price} <small>al mes</small></div>
+          <h2>Conoce tus beneficios.</h2>
+          <ul class="ms-list">${p.items.map(x => `<li>${x}</li>`).join('')}</ul>
+          <p class="ms-note">Consulta alcance de las consultas, servicios elegibles, activación y condiciones. La periodicidad de chequeos debe confirmarse.</p>
+          ${id === 'familiar' ? '<p class="ms-note">Número de beneficiarios y distribución de beneficios pendientes de definición comercial.</p>' : ''}
+          ${id === 'corporativo' ? '<p class="ms-note">Consulta los requisitos de contratación. La salud ocupacional y las brigadas se cotizan por separado.</p>' : ''}
+          ${link('Comparar con otros planes', 'planes')}
+        </div>
+        ${form('plan', 'Plan ' + p.name)}
+      </div>
+    </section>`;
+
+  return bread('Planes / ' + p.name)
+    + heading('Plan de bienestar', 'Plan ' + p.name, p.desc)
+    + detalle
+
+    + sec('Cómo empezar', 'Te acompañamos en tu elección.', '',
+        steps([
+          ['Consulta el plan', 'Conoce los beneficios y requisitos.'],
+          ['Revisa las condiciones', 'Confirma beneficiarios, activación y formas de pago.'],
+          ['Coordina tu afiliación', 'El equipo te indicará cómo completar el proceso.']
+        ]),
+        true)
+
+    + sec('Condiciones', 'Información antes de afiliarte', '',
+        faq('¿Cuándo puedo utilizar los beneficios?', 'La activación debe confirmarse. Los beneficios anuales señalados en los planes Corporativo y Familiar requieren seis meses de afiliación.')
+      + faq('¿Qué incluyen los chequeos gratuitos?', 'Su alcance y periodicidad deben quedar definidos en las condiciones vigentes del plan.')
+      + link('Ver condiciones del plan', 'condiciones'))
+
+    + sec('También sin afiliación', 'Puedes solicitar servicios por separado.',
+        'Consulta y agenda atención individual cuando la necesites.',
+        btn('Ver servicios médicos', 'servicios', 'alt'),
+        true);
+}
+
+
+/* ---------- SERVICIOS MÉDICOS (lista general) ---------- */
+function servicesPage() {
+
+  const especialidades = ['Medicina general', 'Ginecología y obstetricia', 'Pediatría', 'Traumatología', 'Cardiología', 'Urología', 'Otorrinolaringología', 'Psicología', 'Nutrición', 'Optometría'];
+
+  const modalidades = `
+    <div class="ms-grid two">
+      <div class="ms-tile">
+        <span class="ms-icon">${icon('hospital')}</span>
+        <h3>En nuestro centro</h3>
+        <p>Consulta horarios y disponibilidad para los servicios prestados en Mundisalud.</p>
+      </div>
+      <div class="ms-tile">
+        <span class="ms-icon">${icon('network')}</span>
+        <h3>Mediante servicios especializados</h3>
+        <p>Coordinación de atención externa según servicio, prestador y ciudad confirmados.</p>
+      </div>
+    </div>`;
+
+  return bread('Servicios médicos')
+    + heading('Atención para personas y familias', 'Tu servicio. Tu atención.',
+        'Consultas, exámenes y chequeos por separado. No necesitas contratar un plan para atenderte en Mundisalud.')
+
+    + sec('Encuentra tu atención', 'Servicios médicos y diagnóstico',
+        'Selecciona una opción para ver cómo solicitarla.',
+        serviceTiles())
+
+    + sec('Atención especializada', 'Encuentra la especialidad que necesitas.',
+        'Consulta las especialidades habilitadas y sus horarios con nuestro equipo.',
+        `<div class="ms-pills">${especialidades.map(x => `<span class="ms-pill">${x}</span>`).join('')}</div>`
+          + btn('Consultar disponibilidad', 'servicio-consultas'),
+        true)
+
+    + sec('Modalidades de atención', 'Te ayudamos a coordinar tu servicio.', '', modalidades)
+
+    + sec('Más beneficios', 'Conoce nuestros planes de bienestar.',
+        'Además de la atención individual, puedes elegir un plan con beneficios específicos desde $4,99 al mes.',
+        btn('Comparar planes', 'planes'),
+        true);
+}
+
+
+/* ---------- PLANES (lista general y tabla) ---------- */
+function plansPage() {
+  return bread('Planes de bienestar')
+    + heading('Nuestro valor agregado', 'Tres formas de cuidar tu bienestar.',
+        'Conoce los precios, beneficios y condiciones. También puedes solicitar cualquier servicio disponible de forma individual.')
+
+    + sec('Elige tu opción', 'Planes de bienestar',
+        'Cuotas mensuales en dólares de Estados Unidos.',
+        planTiles(true))
+
+    + sec('Compara con claridad', '¿Qué incluye cada plan?', '', compare(), true)
+
+    + sec('Antes de afiliarte', 'Conoce las condiciones', '',
+        faq('¿Las consultas ilimitadas incluyen todas las especialidades?', 'El alcance debe confirmarse. No debe interpretarse que todas las especialidades están incluidas.')
+      + faq('¿Cuántas personas incluye el Familiar?', 'Este dato debe completarse con la definición comercial antes de publicar la oferta.')
+      + faq('¿Los beneficios anuales están disponibles desde el primer mes?', 'Los beneficios anuales indicados en Corporativo y Familiar se habilitan después de seis meses de afiliación.')
+      + link('Consultar condiciones completas', 'condiciones'))
+
+    + sec('Tú eliges', 'También puedes atenderte sin un plan.',
+        'Consulta tarifas individuales y coordina el servicio que necesitas.',
+        btn('Explorar servicios', 'servicios', 'alt'),
+        true);
+}
+
+
+/* ---------- PARA EMPRESAS ---------- */
+function enterprise() {
+
+  // Servicios empresariales: [ícono, título, texto]
+  const offers = [
+    ['clipboard-check', 'Evaluaciones ocupacionales', 'Ingreso, periódicas y de retiro.'],
+    ['flask-conical',   'Laboratorio ocupacional',    'Pruebas según los requerimientos de la evaluación.'],
+    ['truck',           'Brigadas y unidad móvil',    'Consulta jornadas en las instalaciones de tu empresa.'],
+    ['shield-plus',     'Campañas preventivas',       'Prevención y promoción de la salud.'],
+    ['presentation',    'Charlas y capacitaciones',   'Actividades coordinadas para tu equipo.'],
+    ['stethoscope',     'Atención especializada',     'Derivación y seguimiento según disponibilidad.']
+  ];
+
+  const portada = `
+    <div class="ms-hero">
+      <div>
+        <span class="ms-tag">Mundisalud empresas</span>
+        <h1>Salud para tu equipo.<br>Soluciones para tu empresa.</h1>
+        <p>Coordinamos atención médica, evaluaciones ocupacionales y programas preventivos según las necesidades de tu organización.</p>
+        ${btn('Solicitar propuesta', 'cotizacion', 'light')}
+      </div>
+      <div class="ms-art">
+        <span class="ms-eyebrow">Atención coordinada</span>
+        <div class="ms-bigicon">${icon('truck')}</div>
+        <h3>Más cerca de tu equipo.</h3>
+        <p>Brigadas · Unidad móvil · Prevención</p>
+        <div class="ms-art-bottom">${icon('building-2')}En nuestro centro o en tu empresa.</div>
+      </div>
+    </div>`;
+
+  const tarjetas = `
+    <div class="ms-grid">
+      ${offers.map(x => `
+        <div class="ms-tile">
+          <span class="ms-icon">${icon(x[0])}</span>
+          <h3>${x[1]}</h3>
+          <p>${x[2]}</p>
+          ${link('Consultar propuesta', 'cotizacion')}
+        </div>`).join('')}
+    </div>`;
+
+  const unidadMovil = `
+    <div class="ms-grid two">
+      <div class="ms-tile"><h3>En Mundisalud</h3><p>Organización de citas y atención en nuestras instalaciones.</p></div>
+      <div class="ms-tile"><h3>En tu empresa</h3><p>Brigadas y atención extramural sujetas a coordinación y disponibilidad.</p></div>
+    </div>`;
+
+  return bread('Para empresas')
+    + portada
+
+    + sec('Servicios empresariales', 'Una propuesta a la medida de tu operación.', '', tarjetas)
+
+    + sec('Unidad móvil', 'Acercamos la atención a tu empresa.',
+        'Consulta los servicios disponibles, requisitos logísticos y cobertura de nuestras jornadas.',
+        unidadMovil,
+        true)
+
+    + sec('Coordinación empresarial', 'Construyamos una propuesta para tu equipo.', '',
+        steps([
+          ['Comparte tu necesidad', 'Ciudad, número de colaboradores y servicios.'],
+          ['Definimos el alcance', 'Modalidad, jornadas y propuesta económica.'],
+          ['Coordinamos la atención', 'Organización de fechas y ejecución acordada.']
+        ])
+        + btn('Cotizar servicios empresariales', 'cotizacion'))
+
+    + sec('Planes de bienestar', 'Conoce también el Plan Corporativo.',
+        'Una oferta distinta de las evaluaciones ocupacionales y los convenios a medida.',
+        btn('Ver Plan Corporativo', 'plan-corporativo', 'alt'),
+        true)
+
+    + sec('Conversemos', '¿Qué necesita tu empresa?', '', form('empresa'));
+}
+
+
+/* ---------- COTIZACIÓN EMPRESARIAL (formulario solo) ---------- */
+function quotePage() {
+  return bread('Empresas / Cotización')
+    + heading('Hablemos de tu empresa', 'Solicita una propuesta empresarial.',
+        'Cuéntanos qué necesita tu equipo para coordinar una propuesta de atención.')
+    + sec('Cotización', 'Datos de contacto y alcance', '', form('empresa'));
+}
+
+
+/* ---------- NOSOTROS ---------- */
+function about() {
+
+  const valores = `
+    <div class="ms-grid">
+      <div class="ms-tile">
+        <span class="ms-icon">${icon('heart-handshake')}</span>
+        <h3>Atención respetuosa</h3>
+        <p>Orientación clara para coordinar tu atención.</p>
+      </div>
+      <div class="ms-tile">
+        <span class="ms-icon">${icon('shield-plus')}</span>
+        <h3>Prevención</h3>
+        <p>Servicios y chequeos para acompañar tu bienestar.</p>
+      </div>
+      <div class="ms-tile">
+        <span class="ms-icon">${icon('stethoscope')}</span>
+        <h3>Atención integral</h3>
+        <p>Consultas, especialidades y apoyo diagnóstico.</p>
+      </div>
+    </div>`;
+
+  // Espacios para fotos del equipo (cambia los nombres de la lista)
+  const equipo = `
+    <div class="ms-grid">
+      ${['Medicina general', 'Especialidades médicas', 'Laboratorio clínico'].map(x => `
+        <div class="ms-tile">
+          <div class="ms-outline">${icon('user-round')}<p>Fotografía del profesional</p></div>
+          <h3>${x}</h3>
+          <p>Espacio para nombre y credenciales verificadas.</p>
+        </div>`).join('')}
+    </div>`;
+
+  const instalaciones = `
+    <div class="ms-grid two">
+      <div class="ms-outline">${icon('hospital')}<p>Fotografía real del centro médico</p></div>
+      <div class="ms-outline">${icon('flask-conical')}<p>Fotografía real del laboratorio</p></div>
+    </div>
+    <div class="ms-actions">
+      ${btn('Ubicación y contacto', 'contacto')}
+      ${btn('Ver nuestros servicios', 'servicios', 'alt')}
+    </div>`;
+
+  return bread('Nosotros')
+    + heading('Conoce Mundisalud', 'Un equipo comprometido con tu bienestar.',
+        'Somos un centro de especialidades médicas y laboratorio clínico enfocado en atención, prevención y diagnóstico.')
+
+    + sec('Nuestro propósito', 'La salud al alcance de todos.',
+        'Acercamos servicios médicos a personas, familias y empresas mediante atención individual, planes de bienestar y propuestas empresariales.',
+        valores)
+
+    + sec('Nuestro equipo', 'Conoce a quienes te atenderán.', '', equipo, true)
+
+    + sec('Nuestras instalaciones', 'Un espacio para cuidar de ti.', '', instalaciones);
+}
+
+
+/* ---------- CONTACTO ---------- */
+//llama al google maps direccion
+function contact() {
+
+  const datos = `
+    <div>
+      <h2>Visítanos en Quito.</h2>
+
+      <p>
+        Cristóbal de Acuña N29B y Juan de Agama.<br>
+        Sector estación de Metro La Pradera.
+      </p>
+
+      <div class="ms-map" style="width:100%; margin:20px 0;">
+        <iframe
+          src="https://www.google.com/maps/embed?pb=!1m17!1m12!1m3!1d3989.7956311337757!2d-78.49576952503539!3d-0.1932283998048675!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m2!1m1!2zMMKwMTEnMzUuNiJTIDc4wrAyOSczNS41Ilc!5e0!3m2!1ses!2sec!4v1793198067984!5m2!1ses!2sec"
+          width="100%"
+          height="350"
+          style="border:0; border-radius:12px;"
+          allowfullscreen
+          loading="lazy"
+          referrerpolicy="strict-origin-when-cross-origin"
+          title="Ubicación de Mundisalud en Quito">
+        </iframe>
+      </div>
+
+      <h3>Canales de atención</h3>
+
+<div style="display:flex; gap:16px; align-items:center; margin-top:15px;">
+
+  <a
+    href="https://wa.me/593964253317"
+    target="_blank"
+    rel="noopener noreferrer"
+    aria-label="Contactar por WhatsApp"
+    title="WhatsApp"
+    style="display:flex; align-items:center; justify-content:center; width:52px; height:52px; border-radius:50%; background:#25D366; color:white; text-decoration:none; transition:transform .2s;"
+    onmouseover="this.style.transform='scale(1.12)'"
+    onmouseout="this.style.transform='scale(1)'">
+    <i data-lucide="message-circle" style="width:27px; height:27px;"></i>
+  </a>
+
+  <a
+    href="mailto:mundisaludsgsas@gmail.com"
+    aria-label="Enviar correo electrónico"
+    title="Correo electrónico"
+    style="display:flex; align-items:center; justify-content:center; width:52px; height:52px; border-radius:50%; background:#356AC3; color:white; text-decoration:none; transition:transform .2s;"
+    onmouseover="this.style.transform='scale(1.12)'"
+    onmouseout="this.style.transform='scale(1)'">
+    <i data-lucide="mail" style="width:25px; height:25px;"></i>
+  </a>
+
+</div>
+      <div class="ms-actions">
+        ${btn('Consultar un plan', 'planes', 'alt')}
+        ${btn('Soy empresa', 'cotizacion', 'alt')}
+      </div>
+    </div>`;
+
+  return bread('Contacto')
+    + heading(
+        'Estamos para orientarte',
+        'Cuéntanos qué atención necesitas.',
+        'Solicita una cita individual, consulta nuestros planes o coordina una propuesta para tu empresa.'
+      )
+    + `<section class="ms-sec"><div class="ms-split">${datos}${form('cita')}</div></section>`
+    + sec(
+        'Antes de enviar',
+        'Coordinemos tu visita',
+        '',
+        faq('¿Necesito estar afiliado?', 'No. Puedes solicitar los servicios por separado.')
+        + faq('¿Cuándo se confirma la cita?', 'Cuando el equipo de Mundisalud confirme contigo la fecha y disponibilidad.')
+      );
+}
+
+
+/* ---------- CONDICIONES DE PLANES ---------- */
+function conditions() {
+  return bread('Condiciones de planes')
+    + heading('Información comercial', 'Beneficios claros, decisiones informadas.',
+        'Revisa el precio, servicios incluidos y condiciones de la opción que te interesa.')
+
+    + sec('Los tres planes', 'Cuotas y beneficios', '', planTiles())
+
+    + sec('Activación y uso', 'Condiciones que deben quedar definidas', '',
+        faq('Beneficios después de seis meses', 'Corporativo: un laboratorio anual. Familiar: dos laboratorios y una ecografía básica anual, según el folleto.')
+      + faq('Beneficiarios y alcance', 'Pendiente de definición: número de beneficiarios del Familiar, distribución de beneficios, elegibilidad del Corporativo y alcance de las consultas.')
+      + faq('Chequeos, descuentos y tarifas', 'Pendiente de definición: periodicidad de chequeos, pruebas incluidas, servicios elegibles y base de descuentos.')
+      + faq('Pago, renovación y cancelación', 'Espacio para las condiciones comerciales aprobadas antes del lanzamiento.'),
+        true);
+}
+
+
+/* ---------- PRIVACIDAD ---------- */
+function privacy() {
+
+  const puntos = `
+    <ul class="ms-list">
+      <li>Identidad y contacto del responsable.</li>
+      <li>Datos solicitados y finalidad del contacto.</li>
+      <li>Base de tratamiento, destinatarios y conservación.</li>
+      <li>Canales para ejercer derechos.</li>
+      <li>Preferencias de comunicaciones y tecnologías opcionales.</li>
+    </ul>
+    <p class="ms-note">Esta maqueta no envía ni guarda los datos escritos en los formularios.</p>`;
+
+  return bread('Privacidad')
+    + heading('Tus datos', 'Información sobre privacidad', 'Espacio reservado para el aviso aprobado de Mundisalud.')
+    + sec('Aviso de privacidad', 'Contenido por completar antes de publicar', '', puntos);
+}
+
+
+/* ============================================================
+   3.5 NAVEGACIÓN: cambia de página y maneja el formulario
+   ============================================================ */
+
+// Qué función dibuja cada página (nombre de data-page -> función)
+const routes = {
+  inicio:      home,
+  servicios:   servicesPage,
+  planes:      plansPage,
+  empresas:    enterprise,
+  nosotros:    about,
+  contacto:    contact,
+  condiciones: conditions,
+  privacidad:  privacy,
+  cotizacion:  quotePage
+};
+
+// Dibuja una página y marca el botón activo del menú
+function render(page) {
+  let out;
+  if (page.startsWith('servicio-'))  out = servicePage(page.slice(9));
+  else if (page.startsWith('plan-')) out = planPage(page.slice(5));
+  else                               out = (routes[page] || home)();
+
+  main.innerHTML = out;
+  main.setAttribute('aria-label', 'Página ' + page);
+
+  // Resalta el botón del menú que corresponde
+  root.querySelectorAll('nav button').forEach(b => {
+    const selected =
+      b.dataset.page === page ||
+      (page.startsWith('servicio-') && b.dataset.page === 'servicios') ||
+      (page.startsWith('plan-') && b.dataset.page === 'planes') ||
+      (page === 'cotizacion' && b.dataset.page === 'empresas');
+    if (selected) b.setAttribute('aria-current', 'page');
+    else b.removeAttribute('aria-current');
+  });
+
+  // Dibuja los íconos de lucide
+  if (typeof lucide !== 'undefined') lucide.createIcons({ attrs: { width: 20, height: 20 } });
+}
+
+// Al hacer clic en cualquier elemento con data-page, cambia de página
+root.addEventListener('click', e => {
+  const b = e.target.closest('[data-page]');
+  if (b && root.contains(b)) {
+    render(b.dataset.page);
+    root.scrollIntoView({ behavior: 'instant', block: 'start' });
+  }
+});
+
+// Al enviar un formulario: solo muestra un mensaje (NO guarda datos)
+root.addEventListener('submit', e => {
+  if (e.target.matches('[data-form]')) {
+    e.preventDefault();
+    e.target.querySelector('.ms-feedback').innerHTML =
+      '<div class="ms-status">Vista de confirmación: recibimos tu solicitud. En la web final, el equipo coordinará los detalles. Esta demostración no envió ningún dato.</div>';
+  }
+});
+
+// Arranca mostrando el inicio
 render('inicio');
+
 })();
 </script>
 </div>
-
 </body>
 </html>
